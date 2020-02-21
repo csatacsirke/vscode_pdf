@@ -20,19 +20,34 @@ function ParseXrefLine(text: String) : XRefEntry {
 function ParseXref(text: String) : XRefEntry[] {
 	let entries = new Array<XRefEntry>();
 
-	let lines = text.split(/\r\n|\r|\n/);
+	// xref
+	// 0 34
+	// 0000000000 65535 f
+	// 0000000040 00000 n
+	// ....
+	// 
+	// 0000005605 00000 n
+	// trailer
+	// << /Size 34
+	// ....
+	// the first 2 lines ar not needed
+	let lines = text.split(/\r\n|\r|\n/).slice(2);
 
-	for(let line in lines) {
-
+	for(let line of lines) {
+		if(line == "trailer") {
+			break;
+		}
+		entries.push(ParseXrefLine(line));
 	}
-
 
 	return entries;
 }
 
 class PdfParser {
+	private xrefEntries: XRefEntry[] = [];
+
 	public ParsePdf(document: vscode.TextDocument) {
-		console.log('parse start');
+		console.log("parse started");
 
 
 		let text = document.getText();
@@ -49,16 +64,38 @@ class PdfParser {
 		
 		
 		let xrefPosition = parseInt(lastFewLines.slice(startxrefTokenPosition + startxrefToken.length));
-
 		let xrefAsString = text.slice(xrefPosition);
-		
-		console.log(xrefPosition);
+		this.xrefEntries = ParseXref(xrefAsString);
+
+		console.log('parse finished');
 	}
 
-	public GetLocation(position: vscode.Position) : vscode.ProviderResult<vscode.Location> {
+	public GetLocation(document: vscode.TextDocument, position: vscode.Position) : vscode.ProviderResult<vscode.Location> {
+
+		let line = document.lineAt(position).text;
+
+		let suffix = line.substr(position.character);
+		
+		let tokenOffset_R = suffix.search("R");
+		if(tokenOffset_R < 0) {
+			return null;
+		}
+
+		let prefix = line.substr(0, tokenOffset_R + position.character + 1);
 
 
-		return null;
+		let regexResult = prefix.match(/([0-9]+) ([0-9]+) R$/);
+		if(regexResult == null) {
+			return null;
+		}
+
+		let objectNumber = parseInt(regexResult[1]);
+
+		let objectOffset = this.xrefEntries[objectNumber];
+		let objectPosition = document.positionAt(objectOffset.offset);
+		let objectLocation = new vscode.Location(document.uri, objectPosition);
+
+		return objectLocation;
 	}
 }
 
@@ -103,12 +140,8 @@ class PdfDefinitionProvider implements vscode.DefinitionProvider {
 		token: vscode.CancellationToken
 	) : vscode.ProviderResult<vscode.Location> {
 
-		let tokenPosition = new vscode.Position(position.line + 1, 0);
-
-		return this.parser.GetLocation(position);
-		//console.log('Meh!!!');
-		//
-		//return new vscode.Location(document.uri, tokenPosition);
+		console.log('provideDefinition');
+		return this.parser.GetLocation(document, position);
     }
 }
 
