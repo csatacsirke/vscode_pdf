@@ -2,7 +2,7 @@
 	"name": "pdf-tools",
 	"displayName": "Pdf Tools",
 	"description": "Pdf syntax tools, like jump to definition.",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher": "Csatacsirke",
 	"repository": "https://github.com/csatacsirke/vscode_pdf",
 	"engines": {
@@ -35,5 +35,10 @@
 		"@types/vscode": "^1.40.0",
 		"tslint": "^6.0",
 		"typescript": "^3.7"
+	},
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": true
+		}
 	}
 }

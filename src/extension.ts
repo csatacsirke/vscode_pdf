@@ -49,7 +49,7 @@ class PdfParser {
 	public ParsePdf(document: vscode.TextDocument) {
 		console.log("parse started");
 
-
+		
 		let text = document.getText();
 
 		// expected something like:
@@ -64,6 +64,23 @@ class PdfParser {
 		
 		
 		let xrefPosition = parseInt(lastFewLines.slice(startxrefTokenPosition + startxrefToken.length));
+
+		
+		// let _str = text.replace(/\r/gi, "");
+		// let byteBuffer = Buffer.from(_str, "ascii");
+		// let xrefBuffer = byteBuffer.slice(xrefPosition);
+		// let __asString = xrefBuffer.toString("utf8");
+
+		// //__asString = __asString.replace(/\r/gi, "x");
+
+		// //vscode.window.showInformationMessage(byteBuffer.toString().slice(xrefPosition, xrefPosition + 30));
+		// vscode.window.showInformationMessage(__asString.slice(xrefPosition, xrefPosition + 30));
+		
+		// let _pos = document.positionAt(xrefPosition);
+		// let _pos2 = document.positionAt(xrefPosition + 50);
+		// let _text = document.getText(new vscode.Range(_pos, _pos2));
+		
+
 		let xrefAsString = text.slice(xrefPosition);
 		this.xrefEntries = ParseXref(xrefAsString);
 
